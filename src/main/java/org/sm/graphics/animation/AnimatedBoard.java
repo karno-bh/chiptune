@@ -7,8 +7,6 @@ import java.awt.image.BufferedImage;
 
 import javax.swing.*;
 
-import org.sm.graphics.TestBoard010;
-
 public abstract class AnimatedBoard extends JPanel implements Runnable {
 
 	/**

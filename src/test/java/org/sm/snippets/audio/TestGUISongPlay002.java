@@ -1,15 +1,15 @@
-package org.sm.ui;
+package org.sm.snippets.audio;
 
-import org.sm.sound.FYMSong;
-import org.sm.sound.PausableSongProcessor;
-import org.sm.sound.Song;
 import org.sm.datatypes.DoubleCircularBuffer;
 import org.sm.graphics.animation.AnimatedBoard;
 import org.sm.math.RangeMapper;
+import org.sm.sound.FYMSong;
+import org.sm.sound.PausableSongProcessor;
+import org.sm.sound.Song;
 
 import java.awt.*;
 
-public class SongAnimator extends AnimatedBoard {
+public class TestGUISongPlay002 extends AnimatedBoard {
 
     private final PausableSongProcessor songProcessor;
 
@@ -23,7 +23,7 @@ public class SongAnimator extends AnimatedBoard {
 
     private int renderedCycle = 0;
 
-    public SongAnimator(int boardWidth, int boardHeight, PausableSongProcessor songProcessor) {
+    public TestGUISongPlay002(int boardWidth, int boardHeight, PausableSongProcessor songProcessor) {
         super(boardWidth, boardHeight);
         this.songProcessor = songProcessor;
         this.songBuffer = new double [songProcessor.getSamplingRate() / GAME_HERZ];
@@ -77,4 +77,14 @@ public class SongAnimator extends AnimatedBoard {
     @Override
     protected void onInit() {}
 
+    public static void main(String[] args) {
+        Song song = new FYMSong("data/spb_demo.fym");
+        System.out.printf("Playing:\n\tAuthor: %s\n\tTrack:  %s\n", song.getAuthor(), song.getTrack());
+        System.out.println("\tDuration: " + (double) song.getFrameCount() / song.getFrameRate() + " seconds");
+        PausableSongProcessor songProcessor = new PausableSongProcessor();
+        songProcessor.setSong(song);
+        TestGUISongPlay002 testGUISongPlay001 = new TestGUISongPlay002(800, 600, songProcessor);
+        testGUISongPlay001.start();
+        songProcessor.process();
+    }
 }

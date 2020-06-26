@@ -1,7 +1,7 @@
 package org.sm.listener;
 
-import org.sm.ay.SongProcessor;
 import org.sm.datatypes.DoubleCircularBuffer;
+import org.sm.sound.PausableSongProcessor;
 
 public class ConsoleLogListener implements Runnable{
 
@@ -9,11 +9,11 @@ public class ConsoleLogListener implements Runnable{
 
     private final int logRate;
 
-    private final SongProcessor songProcessor;
+    private final PausableSongProcessor songProcessor;
 
     private final int samplingRate;
 
-    public ConsoleLogListener(int logRate, SongProcessor songProcessor) {
+    public ConsoleLogListener(int logRate, PausableSongProcessor songProcessor) {
         this.logRate = logRate;
         this.timeBetweenUpdates = 1000d / logRate;
         this.songProcessor = songProcessor;
