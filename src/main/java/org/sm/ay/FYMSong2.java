@@ -1,11 +1,14 @@
 package org.sm.ay;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.InflaterInputStream;
 
-public class FYMSong implements Song {
+public class FYMSong2 implements Song {
 
     private static final int INPUT_STREAM_END_OF_INPUT = -1;
     private static final int STRING_END_OF_INPUT = 0;
@@ -14,7 +17,7 @@ public class FYMSong implements Song {
 
     private short[] songBuffer;
 
-    private int offset;
+    private int offset = -1;
     private int frameCount;
     private int loopFrame;
     private int chipClock;
@@ -24,20 +27,15 @@ public class FYMSong implements Song {
     private String author;
 
 
-    public FYMSong(String songFileLocation) {
-        songBuffer = loadBufferFromFile(songFileLocation);
-
-        int[] ptr = new int[1];
-        offset = getBigEndianInt(ptr, songBuffer);
-        frameCount = getBigEndianInt(ptr, songBuffer);
-        loopFrame = getBigEndianInt(ptr, songBuffer);
-        chipClock = getBigEndianInt(ptr, songBuffer);
-        frameRate = getBigEndianInt(ptr, songBuffer);
-        track = getCString(ptr, songBuffer);
-        author = getCString(ptr, songBuffer);
+    public FYMSong2(String songFileLocation) {
+        this(songFileLocation, false);
     }
 
-    private short[] loadBufferFromFile(String songFileLocation) {
+    public FYMSong2(String songFileLocation, boolean onlyHeader) {
+        songBuffer = loadBufferFromFile(songFileLocation, onlyHeader);
+    }
+
+    private short[] loadBufferFromFile(String songFileLocation, boolean onlyHeader) {
         File songFile = new File(songFileLocation);
         if (!songFile.isFile()) {
             throw new RuntimeException("Location: " + songFileLocation + " is not a file");
@@ -50,16 +48,26 @@ public class FYMSong implements Song {
         }
         BufferedInputStream bis = new BufferedInputStream(fis);
         try (InflaterInputStream iis = new InflaterInputStream(bis)) {
-            List<Short> buffer = new ArrayList<>();
+            int[] ptr = new int[1];
+            ArrayList<Short> buffer = new ArrayList<>();
             int aByte;
-            while ((aByte = iis.read()) != INPUT_STREAM_END_OF_INPUT) {
+            for (int byteCounter = 0; (aByte = iis.read()) != INPUT_STREAM_END_OF_INPUT; byteCounter++) {
                 buffer.add((short)aByte);
+                if (byteCounter == BYTES_IN_INT) {
+                    short[] buff = dumpToArray(buffer);
+                    offset = getBigEndianInt(ptr, buff);
+                } else if (byteCounter == offset) {
+                    short[] buff = dumpToArray(buffer);
+                    frameCount = getBigEndianInt(ptr, buff);
+                    loopFrame = getBigEndianInt(ptr, buff);
+                    chipClock = getBigEndianInt(ptr, buff);
+                    frameRate = getBigEndianInt(ptr, buff);
+                    track = getCString(ptr, buff);
+                    author = getCString(ptr, buff);
+                    if (onlyHeader) break;
+                }
             }
-            short[] retBuffer = new short[buffer.size()];
-            for (int i = 0; i < buffer.size(); i++) {
-                retBuffer[i] = buffer.get(i);
-            }
-            return retBuffer;
+            return dumpToArray(buffer);
         } catch (IOException ioe) {
             throw new RuntimeException("Cannot process: " + songFileLocation, ioe);
         }
@@ -108,6 +116,14 @@ public class FYMSong implements Song {
 //            throw new RuntimeException();
         }
         return next;
+    }
+
+    private short[] dumpToArray(ArrayList<Short> arrayList) {
+        short[] retVal = new short[arrayList.size()];
+        for (int i = 0; i < arrayList.size(); i++) {
+            retVal[i] = arrayList.get(i);
+        }
+        return retVal;
     }
 
     public int getChipClock() {

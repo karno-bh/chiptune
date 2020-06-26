@@ -12,5 +12,9 @@ public interface Song {
 
     String getAuthor();
 
-    public int getFrameCount();
+    int getFrameCount();
+
+    int getFrame();
+
+    void setFrame(int frameNum);
 }

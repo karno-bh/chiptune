@@ -1,4 +1,4 @@
-package org.sm.tests;
+package org.sm.ui;
 
 import org.sm.ay.FYMSong;
 import org.sm.ay.PausableSongProcessor;
@@ -10,7 +10,7 @@ import org.sm.math.RangeMapper;
 
 import java.awt.*;
 
-public class TestGUISongPlay003 extends AnimatedBoard {
+public class SongAnimator extends AnimatedBoard {
 
     private final PausableSongProcessor songProcessor;
 
@@ -24,7 +24,7 @@ public class TestGUISongPlay003 extends AnimatedBoard {
 
     private int renderedCycle = 0;
 
-    public TestGUISongPlay003(int boardWidth, int boardHeight, PausableSongProcessor songProcessor) {
+    public SongAnimator(int boardWidth, int boardHeight, PausableSongProcessor songProcessor) {
         super(boardWidth, boardHeight);
         this.songProcessor = songProcessor;
         this.songBuffer = new double [songProcessor.getSamplingRate() / GAME_HERZ];
@@ -83,8 +83,7 @@ public class TestGUISongPlay003 extends AnimatedBoard {
         System.out.printf("Playing:\n\tAuthor: %s\n\tTrack:  %s\n", song.getAuthor(), song.getTrack());
         System.out.println("\tDuration: " + (double) song.getFrameCount() / song.getFrameRate() + " seconds");
         PausableSongProcessor songProcessor = new PausableSongProcessor();
-        songProcessor.setSong(song);
-        TestGUISongPlay003 testGUISongPlay001 = new TestGUISongPlay003(800, 600, songProcessor);
+        SongAnimator testGUISongPlay001 = new SongAnimator(800, 600, songProcessor);
         testGUISongPlay001.start();
         songProcessor.process();
     }

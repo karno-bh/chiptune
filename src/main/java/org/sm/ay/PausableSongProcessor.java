@@ -6,7 +6,7 @@ import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.SourceDataLine;
 
-public class SongProcessor {
+public class PausableSongProcessor {
 
     private static final int BUFFER_SIZE = 1024 * 16;
     private static final short MAX_VOLUME = Short.MAX_VALUE;
@@ -17,20 +17,38 @@ public class SongProcessor {
     private int interruptCounter = 0;
 
     private Chip chip;
-    private Song song;
+
+    private volatile Song song;
 
     private SourceDataLine sourceDataLine;
 
     private volatile DoubleCircularBuffer resultVolumeBuffer;
 
-    public SongProcessor(Song song) {
+    private volatile boolean playable = true;
+
+    private ChipRegisters registers = new ChipRegisters();
+
+    private double[] channelAmplitudes;
+
+    private byte[] buffer;
+
+    private volatile FrameNotifier frameNotifier;
+
+    public PausableSongProcessor() {
+        this.sourceDataLine = prepareSound();
+        buffer = new byte[BUFFER_SIZE];
+        resultVolumeBuffer = new DoubleCircularBuffer(BUFFER_SIZE);
+    }
+
+    public final void setSong(Song song) {
+        this.song = song;
         int interruptFrequency = song.getFrameRate();
         int chipClock = song.getChipClock();
         this.pulsesPerInterrupt = SAMPLING_RATE / interruptFrequency;
-
         this.chip = new Chip(SAMPLING_RATE, chipClock);
-        this.song = song;
-        this.sourceDataLine = prepareSound();
+        channelAmplitudes = new double[chip.getChannelsSize()];
+        registers = song.nextFrame(registers);
+        chip.updateChipState(registers);
     }
 
     private SourceDataLine prepareSound() {
@@ -53,14 +71,11 @@ public class SongProcessor {
     }
 
     public void process() {
-        ChipRegisters registers = new ChipRegisters();
-        double[] channelAmplitudes = new double[chip.getChannelsSize()];
-        registers = song.nextFrame(registers);
-        chip.updateChipState(registers);
-
-        byte[] buffer = new byte[BUFFER_SIZE];
-        resultVolumeBuffer = new DoubleCircularBuffer(BUFFER_SIZE);
         while (true) {
+            if (!playable) {
+                resultVolumeBuffer.setDataAvailable(false);
+                break;
+            }
             for (int i = 0; i < BUFFER_SIZE; i++) {
                 chip.cycle(channelAmplitudes);
                 short mixedVolume = mixedVolume(channelAmplitudes);
@@ -77,6 +92,9 @@ public class SongProcessor {
                     interruptCounter = 0;
                     registers = song.nextFrame(registers);
                     chip.updateChipState(registers);
+                    if (frameNotifier != null) {
+                        frameNotifier.onFrameChange(song.getFrame());
+                    }
                 }
             }
             resultVolumeBuffer.setDataAvailable(true);
@@ -104,5 +122,23 @@ public class SongProcessor {
 
     public static short getMaxVolume() {
         return MAX_VOLUME;
+    }
+
+    public void setPlayable(boolean playable) {
+        this.playable = playable;
+    }
+
+    public boolean isPlayable() {
+        return playable;
+    }
+
+    public void setFrame(int frame) {
+        if (song != null) {
+            song.setFrame(frame);
+        }
+    }
+
+    public void setFrameNotifier(FrameNotifier frameNotifier) {
+        this.frameNotifier = frameNotifier;
     }
 }
