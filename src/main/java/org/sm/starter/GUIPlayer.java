@@ -209,7 +209,7 @@ public class GUIPlayer {
         JSlider source = (JSlider) e.getSource();
         if (!source.getValueIsAdjusting() && sliderMouseDown) {
             int sliderValue = source.getValue();
-            System.out.println(sliderValue + " here?");
+            // System.out.println(sliderValue + " here?");
             if (reverseSliderMapper != null) {
                 int frame = (int)reverseSliderMapper.map(sliderValue);
                 song.setFrame(frame);
@@ -268,7 +268,20 @@ public class GUIPlayer {
     }
 
     private void onPlayButtonClick(ActionEvent e) {
-        if (song == null) return;
+        if (song == null) {
+            if (filesTableData == null || filesTableData.isEmpty()) return;
+            int[] selectedRows = filesTable.getSelectedRows();
+            songIndex = 0;
+            if (selectedRows != null && selectedRows.length != 0) {
+                songIndex = selectedRows[0];
+            }
+            filesTable.setRowSelectionInterval(songIndex, songIndex);
+            String absSongPath = (String)filesTableData.get(songIndex).get(ABS_FILE_LOCATION_INDEX);
+            loadSong(absSongPath);
+            playPauseButton.setIcon(icons.get(PAUSE));
+            songProcessorThread.unfreeze();
+            return;
+        }
         if (onPlay) {
             playPauseButton.setIcon(icons.get(PLAY));
             songProcessorThread.freeze();

@@ -31,8 +31,8 @@ public class ConsoleLogListener implements Runnable{
             for (int i = 0; i < buff.length; i++) {
                 sb.append(buff[i]).append(' ');
             }
-            System.out.println("========================: " + buff.length);
-            System.out.println(sb.toString());
+            /*System.out.println("========================: " + buff.length);
+            System.out.println(sb.toString());*/
         }
     }
 
@@ -42,7 +42,7 @@ public class ConsoleLogListener implements Runnable{
 
     @Override
     public void run() {
-        System.out.println("here!");
+//        System.out.println("here!");
         long lastUpdateTime = System.currentTimeMillis();
         while(true) {
             long now = System.currentTimeMillis();

@@ -9,7 +9,7 @@ public class Noise {
 			swap(x, y);
 		}
 		for (int i = 0; i < 256; i++) {
-			System.out.println(permutation[i]);
+//			System.out.println(permutation[i]);
 			p[256 + i] = p[i] = permutation[i];
 		}
 	}

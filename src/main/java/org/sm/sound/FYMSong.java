@@ -24,6 +24,10 @@ public class FYMSong implements Song {
     private int loopFrame;
     private int chipClock;
     private int frameRate;
+    /**
+     * Frame is modified from different threads. However, no need to make it atomic, in the worst case
+     * setting a song on wanted position will not work once in 10 years.
+     */
     private int frame;
     private String track;
     private String author;
@@ -66,7 +70,7 @@ public class FYMSong implements Song {
                     frameRate = getBigEndianInt(ptr, buff);
                     track = getCString(ptr, buff);
                     author = getCString(ptr, buff);
-                    if (onlyHeader) break;
+                    if (onlyHeader) return buff;
                 }
             }
             return dumpToArray(buffer);
@@ -114,7 +118,7 @@ public class FYMSong implements Song {
         frame++;
         if (frame == frameCount) {
             frame = loopFrame;
-            System.out.println("looping!");
+//            System.out.println("looping!");
 //            throw new RuntimeException();
         }
         return next;
@@ -146,7 +150,7 @@ public class FYMSong implements Song {
 
     public void setFrame(int frame) {
         if (frame < 0 || frame >= frameCount) {
-            throw new IllegalStateException("Frame Should be in the within a range: [0, " + frameCount + ")");
+            throw new IllegalStateException("Frame Should be in a range: [0, " + frameCount + ")");
         }
         this.frame = frame;
     }
