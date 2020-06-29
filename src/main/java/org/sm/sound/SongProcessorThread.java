@@ -15,6 +15,7 @@ public class SongProcessorThread implements Runnable {
     @Override
     public void run() {
         while(canRun) {
+            // the thread will be locked once song processor will release.
             synchronized (lock) {
                 try {
                     lock.wait();
@@ -23,6 +24,9 @@ public class SongProcessorThread implements Runnable {
                 }
             }
 
+            // While song processor is playable it will not proceed further in this thread loop.
+            // Song processor in that time decodes the data and feeds it to audio card.
+            // Once it is not playable it the thread will be locked to not consume CPU without a need
             songProcessor.process();
         }
     }
